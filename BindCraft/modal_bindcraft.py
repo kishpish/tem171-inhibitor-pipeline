@@ -1,21 +1,12 @@
 """
 adapting
 https://colab.research.google.com/github/martinpacesa/BindCraft/blob/main/notebooks/BindCraft.ipynb
-
-Approximate cost for 3 designs, PDL1.pdb only:
-- A10G = $2, 1.5h
-- A100 = $3, 1h
-- H100 = $4, 40m
 """
 
 import os
 from pathlib import Path
 
 from modal import App, Image
-
-GPU = os.environ.get("GPU", "A10G")
-TIMEOUT = int(os.environ.get("TIMEOUT", 720))
-print(f"Using GPU {GPU}; TIMEOUT {TIMEOUT}")
 
 
 def set_up_pyrosetta():
@@ -1063,7 +1054,7 @@ def main(
     out_dir: str = "./out/bindcraft",
 ):
     """
-    target_hotspot_residues: What positions to target in your protein of interest? For example 1,2-10 or chain specific A1-10,B1-20 or entire chains A. If left blank, an appropriate site will be selected by the pipeline.
+    target_hotspot_residues: What positions to target in your protein of interest? For example 1,2-10 or chain specific A1-10,B1-20 or entire chains A. If kept blank, an appropriate site will be selected by the pipeline.
     """
     from datetime import datetime
 
