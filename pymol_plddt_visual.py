@@ -1,6 +1,6 @@
 # Load extension into pymol. In the pymol command prompt:
 # run https://raw.githubusercontent.com/cbalbin-bio/pymol-color-alphafold/master/coloraf.py
-
+#then: coloraf model_name
 
 from pymol import cmd
 
