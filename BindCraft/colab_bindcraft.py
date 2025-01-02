@@ -1,19 +1,20 @@
 #@title Binder design settings
+#@title Binder design settings
 # @markdown ---
 # @markdown Enter path where to save your designs. We recommend to save on Google drive so that you can continue generating at any time.
-design_path = "/content/drive/MyDrive/BindCraft/PDL1/" # @param {"type":"string","placeholder":"/content/drive/MyDrive/BindCraft/PDL1/"}
+design_path = "/content/drive/MyDrive/BindCraft/7QOR()/" # @param {"type":"string","placeholder":"/content/drive/MyDrive/BindCraft/PDL1/"}
 
 # @markdown Enter the name that should be prefixed to your binders (generally target name).
-binder_name = "PDL1" # @param {"type":"string","placeholder":"PDL1"}
+binder_name = "7QOR" # @param {"type":"string","placeholder":"PDL1"}
 
 # @markdown The path to the .pdb structure of your target. Can be an experimental or AlphaFold2 structure. We recommend trimming the structure to as small as needed, as the whole selected chains will be backpropagated through the network and can significantly increase running times.
-starting_pdb = "/content/bindcraft/example/PDL1.pdb" # @param {"type":"string","placeholder":"/content/bindcraft/example/PDL1.pdb"}
+starting_pdb = "/Users/krishivpotluri/Downloads/7qor.cif" # @param {"type":"string","placeholder":"/content/bindcraft/example/PDL1.pdb"}
 
 # @markdown Which chains of your PDB to target? Can be one or multiple, in a comma-separated format. Other chains will be ignored during design.
 chains = "A" # @param {"type":"string","placeholder":"A,C"}
 
-# @markdown What positions to target in your protein of interest? For example `1,2-10` or chain specific `A1-10,B1-20` or entire chains `A`. If left blank, an appropriate site will be selected by the pipeline.
-target_hotspot_residues = "" # @param {"type":"string","placeholder":""}
+# #markdown
+target_hotspot_residues = "S70, K73, H153, E171, E104, E239, S242, R243, M270, N274" # @param {"type":"string","placeholder":""}
 
 # @markdown What is the minimum and maximum size of binders you want to design? Pipeline will randomly sample different sizes between these values.
 lengths = "70,150" # @param {"type":"string","placeholder":"70,150"}
@@ -176,17 +177,93 @@ pr.init(f'-ignore_unrecognized_res -ignore_zero_occupancy -mute all -holes:dalph
 ####################################
 ###################### BindCraft Run
 ####################################
-# Colab-specific: live displays
-num_sampled_trajectories = len(pd.read_csv(trajectory_csv))
-num_accepted_designs = len(pd.read_csv(final_csv))
-sampled_trajectories_label = HTML(value=f"<h3 style='color: #1f77b4;'>Sampled Trajectories: <span style='color: #1f77b4;'>{num_sampled_trajectories}</span></h3>")
-accepted_designs_label = HTML(value=f"<h3 style='color: #2ca02c;'>Accepted Designs: <span style='color: #2ca02c;'>{num_accepted_designs}</span></h3>")
-display(VBox([sampled_trajectories_label, accepted_designs_label]))
+#@title Run BindCraft with Google Drive Upload
+####################################
+###################### BindCraft Run
+####################################
 
-# initialise counters
+import os
+import sys
+from google.colab import drive
+from Bio.PDB import PDBParser, PDBIO
+from Bio.PDB.Structure import Structure
+
+# Mount Google Drive
+drive.mount('/content/drive')
+
+# Create the directory structure
+!mkdir -p /content/bindcraft/example/
+
+# Define paths
+drive_path = '/content/drive/MyDrive/WindCraft/7qor-pdb-bundle1.pdb'  # Path to your file in Drive
+input_path = '/content/bindcraft/example/7qor-pdb-bundle1.pdb'
+
+# Copy file from Drive to working directory
+!cp "{drive_path}" "{input_path}"
+
+# Verify file copy
+if os.path.exists(input_path):
+    file_size = os.path.getsize(input_path)
+    print(f"File copied successfully. Size: {file_size} bytes")
+    
+    # Print first few lines for verification
+    print("\nFirst few lines of the file:")
+    !head -n 5 {input_path}
+else:
+    raise FileNotFoundError(f"Failed to copy file from Drive")
+
+# Update target settings with your parameters
+target_settings = {
+    "binder_name": "7QOR",
+    "starting_pdb": input_path,
+    "chains": "A",  # Modify this according to your target chain
+    "target_hotspot_residues": "",
+    "number_of_final_designs": 3,
+    "lengths": [70, 150]
+}
+
+# Function to clean and renumber PDB
+def clean_and_renumber_pdb(pdb_file_path, output_file_path):
+    try:
+        parser = PDBParser(QUIET=True)
+        structure = parser.get_structure(target_settings["binder_name"], pdb_file_path)
+        
+        # Renumber residues
+        residue_number = 1
+        for model in structure:
+            for chain in model:
+                for residue in chain:
+                    residue.id = (' ', residue_number, residue.id[2])
+                    residue_number += 1
+                    
+        # Save structure
+        io = PDBIO()
+        io.set_structure(structure)
+        io.save(output_file_path)
+        print("Successfully cleaned and renumbered PDB file")
+        
+    except Exception as e:
+        print(f"Error processing PDB file: {str(e)}")
+        raise
+
+# Clean and renumber the uploaded file
+cleaned_pdb_path = f'/content/bindcraft/example/{target_settings["binder_name"]}_cleaned.pdb'
+clean_and_renumber_pdb(input_path, cleaned_pdb_path)
+
+# Update target_settings with cleaned PDB path
+target_settings["starting_pdb"] = cleaned_pdb_path
+
+# Verify the cleaned file
+if os.path.exists(cleaned_pdb_path):
+    print(f"Cleaned PDB file created successfully at: {cleaned_pdb_path}")
+else:
+    raise FileNotFoundError("Failed to create cleaned PDB file")
+
 script_start_time = time.time()
 trajectory_n = 1
 accepted_designs = 0
+rejected_designs = 0
+
 
 ### start design loop
 while True:
@@ -290,47 +367,44 @@ while True:
 
                 ### MPNN redesign of starting binder
                 mpnn_trajectories = mpnn_gen_sequence(trajectory_pdb, binder_chain, trajectory_interface_residues, advanced_settings)
-                existing_mpnn_sequences = set(pd.read_csv(mpnn_csv, usecols=['Sequence'])['Sequence'].values)
 
-                # create set of MPNN sequences with allowed amino acid composition
-                restricted_AAs = set(aa.strip().upper() for aa in advanced_settings["omit_AAs"].split(',')) if advanced_settings["force_reject_AA"] else set()
+                # whether to hard reject sequences with excluded amino acids
+                if advanced_settings["force_reject_AA"]:
+                    restricted_AAs = set(advanced_settings["omit_AAs"].split(','))
+                    mpnn_sequences = [{'seq': mpnn_trajectories['seq'][n][-length:], 'score': mpnn_trajectories['score'][n], 'seqid': mpnn_trajectories['seqid'][n]}
+                        for n in range(advanced_settings["num_seqs"])
+                        if not any(restricted_AA in mpnn_trajectories['seq'][n] for restricted_AA in restricted_AAs)]
+                else:
+                    mpnn_sequences = [{'seq': mpnn_trajectories['seq'][n][-length:], 'score': mpnn_trajectories['score'][n], 'seqid': mpnn_trajectories['seqid'][n]}
+                        for n in range(advanced_settings["num_seqs"])]
 
-                mpnn_sequences = sorted({
-                    mpnn_trajectories['seq'][n][-length:]: {
-                        'seq': mpnn_trajectories['seq'][n][-length:],
-                        'score': mpnn_trajectories['score'][n],
-                        'seqid': mpnn_trajectories['seqid'][n]
-                    } for n in range(advanced_settings["num_seqs"])
-                    if (not restricted_AAs or not any(aa in mpnn_trajectories['seq'][n][-length:].upper() for aa in restricted_AAs))
-                    and mpnn_trajectories['seq'][n][-length:] not in existing_mpnn_sequences
-                }.values(), key=lambda x: x['score'])
+                # sort MPNN sequences by lowest MPNN score
+                mpnn_sequences.sort(key=lambda x: x['score'])
 
-                del existing_mpnn_sequences
+                # add optimisation for increasing recycles if trajectory is beta sheeted
+                if advanced_settings["optimise_beta"] and float(trajectory_beta) > 15:
+                    advanced_settings["num_recycles_validation"] = advanced_settings["optimise_beta_recycles_valid"]
 
-                # check whether any sequences are left after amino acid rejection and duplication check, and if yes proceed with prediction
-                if mpnn_sequences:
-                    # add optimisation for increasing recycles if trajectory is beta sheeted
-                    if advanced_settings["optimise_beta"] and float(trajectory_beta) > 15:
-                        advanced_settings["num_recycles_validation"] = advanced_settings["optimise_beta_recycles_valid"]
+                ### Compile prediction models once for faster prediction of MPNN sequences
+                clear_mem()
+                # compile complex prediction model
+                complex_prediction_model = mk_afdesign_model(protocol="binder", num_recycles=advanced_settings["num_recycles_validation"], data_dir=advanced_settings["af_params_dir"],
+                                                            use_multimer=multimer_validation)
+                complex_prediction_model.prep_inputs(pdb_filename=target_settings["starting_pdb"], chain=target_settings["chains"], binder_len=length, rm_target_seq=advanced_settings["rm_template_seq_predict"],
+                                                    rm_target_sc=advanced_settings["rm_template_sc_predict"])
 
-                    ### Compile prediction models once for faster prediction of MPNN sequences
-                    clear_mem()
-                    # compile complex prediction model
-                    complex_prediction_model = mk_afdesign_model(protocol="binder", num_recycles=advanced_settings["num_recycles_validation"], data_dir=advanced_settings["af_params_dir"],
-                                                                use_multimer=multimer_validation)
-                    complex_prediction_model.prep_inputs(pdb_filename=target_settings["starting_pdb"], chain=target_settings["chains"], binder_len=length, rm_target_seq=advanced_settings["rm_template_seq_predict"],
-                                                        rm_target_sc=advanced_settings["rm_template_sc_predict"])
+                # compile binder monomer prediction model
+                binder_prediction_model = mk_afdesign_model(protocol="hallucination", use_templates=False, initial_guess=False,
+                                                            use_initial_atom_pos=False, num_recycles=advanced_settings["num_recycles_validation"],
+                                                            data_dir=advanced_settings["af_params_dir"], use_multimer=multimer_validation)
+                binder_prediction_model.prep_inputs(length=length)
 
-                    # compile binder monomer prediction model
-                    binder_prediction_model = mk_afdesign_model(protocol="hallucination", use_templates=False, initial_guess=False,
-                                                                use_initial_atom_pos=False, num_recycles=advanced_settings["num_recycles_validation"],
-                                                                data_dir=advanced_settings["af_params_dir"], use_multimer=multimer_validation)
-                    binder_prediction_model.prep_inputs(length=length)
+                # iterate over designed sequences
+                for mpnn_sequence in mpnn_sequences:
+                    mpnn_time = time.time()
 
-                    # iterate over designed sequences
-                    for mpnn_sequence in mpnn_sequences:
-                        mpnn_time = time.time()
-
+                    # compile sequences dictionary with scores and remove duplicate sequences
+                    if mpnn_sequence['seq'] not in [v['seq'] for v in mpnn_dict.values()]:
                         # generate mpnn design name numbering
                         mpnn_design_name = design_name + "_mpnn" + str(mpnn_n)
                         mpnn_score = round(mpnn_sequence['score'],2)
@@ -353,7 +427,6 @@ while True:
                         # if AF2 filters are not passed then skip the scoring
                         if not pass_af2_filters:
                             print(f"Base AF2 filters not passed for {mpnn_design_name}, skipping interface scoring")
-                            mpnn_n += 1
                             continue
 
                         # calculate statistics for each model individually
@@ -376,7 +449,7 @@ while True:
                                 rmsd_site = unaligned_rmsd(trajectory_pdb, mpnn_design_pdb, binder_chain, binder_chain)
 
                                 # calculate RMSD of target compared to input PDB
-                                target_rmsd = target_pdb_rmsd(mpnn_design_pdb, target_settings["starting_pdb"], target_settings["chains"])
+                                target_rmsd = unaligned_rmsd(target_settings["starting_pdb"], mpnn_design_pdb, target_settings["chains"], 'A')
 
                                 # add the additional statistics to the mpnn_complex_statistics dictionary
                                 mpnn_complex_statistics[model_num+1].update({
@@ -500,10 +573,9 @@ while True:
                             insert_data(final_csv, final_data)
 
                             # copy animation from accepted trajectory
-                            if advanced_settings["save_design_animations"]:
-                                accepted_animation = os.path.join(design_paths["Accepted/Animation"], f"{design_name}.html")
-                                if not os.path.exists(accepted_animation):
-                                    shutil.copy(os.path.join(design_paths["Trajectory/Animation"], f"{design_name}.html"), accepted_animation)
+                            accepted_animation = os.path.join(design_paths["Accepted/Animation"], f"{design_name}.html")
+                            if not os.path.exists(accepted_animation):
+                                shutil.copy(os.path.join(design_paths["Trajectory/Animation"], f"{design_name}.html"), accepted_animation)
 
                             # copy plots of accepted trajectory
                             plot_files = os.listdir(design_paths["Trajectory/Plots"])
@@ -539,14 +611,14 @@ while True:
                         # if enough mpnn sequences of the same trajectory pass filters then stop
                         if accepted_mpnn >= advanced_settings["max_mpnn_sequences"]:
                             break
-
-                    if accepted_mpnn >= 1:
-                        print("Found "+str(accepted_mpnn)+" MPNN designs passing filters")
                     else:
-                        print("No accepted MPNN designs found for this trajectory.")
+                        print("Skipping duplicate sequence")
 
+                if accepted_mpnn >= 1:
+                    print("Found "+str(accepted_mpnn)+" MPNN designs passing filters")
                 else:
-                    print('Duplicate MPNN designs sampled with different trajectory, skipping current trajectory optimisation')
+                    print("No accepted MPNN designs found for this trajectory.")
+                    rejected_designs += 1
 
                 # save space by removing unrelaxed design trajectory PDB
                 if advanced_settings["remove_unrelaxed_trajectory"]:
@@ -567,12 +639,6 @@ while True:
 
         # increase trajectory number
         trajectory_n += 1
-
-        # Colab-specific: update counters
-        num_sampled_trajectories = len(pd.read_csv(trajectory_csv))
-        num_accepted_designs = len(pd.read_csv(final_csv))
-        sampled_trajectories_label.value = f"Sampled trajectories: {num_sampled_trajectories}"
-        accepted_designs_label.value = f"Accepted designs: {num_accepted_designs}"
 
 ### Script finished
 elapsed_time = time.time() - script_start_time
