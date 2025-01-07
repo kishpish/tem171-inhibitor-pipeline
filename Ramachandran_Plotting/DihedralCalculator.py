@@ -1,22 +1,6 @@
 
 """ 
-	====================================================================================
-	Functions here are called by main() to created a Pandas DataFrame of dihedral angle 
-	information from a given PDB file. Functions can also be used elsewhere for 
-	standalone use. 
-	
-	Version 2.0.1:
-	 - Relies on the easily accessible Biopython package, rather than Phenix as in 
-	   versions <2.0 (as facilitated by functions here)
-	 - User arguments can be now easily parsed in from the command line
-	 - If required, the script could be implemented into existing protein analysis 
-	   pipelines by importing this function ( main() ).
-
-	Author information:
-	 - Joseph I. J. Ellaway
-	 - josephellaway@gmail.com
-	 - https://github.com/Joseph-Ellaway
-	====================================================================================
+dihedral calculator for ramachandran plotting :)
 """
 
 # Removes warning messages from Biopython. Comment out to debug
@@ -46,8 +30,8 @@ def ResidueNames(chain):
 	# Iterate over residues in chain
 	for index, residue in enumerate(chain):
 
-		res_names.append(residue.resname) 	# Residue name (3-letter code)
-		res_indices.append(residue.id[1])	# Residue position in chain
+		res_names.append(residue.resname) 	
+		res_indices.append(residue.id[1])	
 
 	return res_names, res_indices
 
@@ -56,7 +40,7 @@ def ResidueNames(chain):
 def ToDegrees(radian_list):
 	"""
 	===============================================
-	Converts a list of floats in radians to degrees
+	Converts list of floats in radians to degrees
 	===============================================
 	"""
 
