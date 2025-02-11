@@ -4,3 +4,5 @@ The emergence of TEM-171 β-lactamase represents a critical threat to modern ant
 
 ## Pipeline:
 This pipeline should serve as a guideline, visualization, and process description. The pipeline relies on several cutting-edge AL/ML tools for protein structure prediction, binder generation, protein analysis, molecular dynamics, docking & simulations, and more. Installation can be complex, so through this pipeline I provide an in-depth overview of all ML tool installations I utilized/produced, as well as results that followed.  
+
+shoutout Anish Maddipoti @NVIDIA Brev.dev
