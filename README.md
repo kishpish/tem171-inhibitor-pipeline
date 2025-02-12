@@ -8,3 +8,25 @@ This pipeline should serve as a guideline, visualization, and process descriptio
 ## Credits:
 
 Thanks to Dr. Jennifer Madrigal for the structural and crystallographic insight into the structure of the protein, as well as information surrounding basic MD simulations. Thank you to Cianna Calia, for all the help with BindCraft adn RFDiffusion, and the clarification of the exact metrics behind these models. Special thanks to Anish Maddipoti at NVIDIA, for the large support and access to brev.dev credits to run trials.
+
+Extended Credits for the code inspiration and segments to:
+
+  https://github.com/Joseph-Ellaway/Ramachandran_Plotter
+  https://github.com/LePingKYXK/PDB_cleaner/blob/master/pdb_cleaner.py
+  https://github.com/harryjubb/pdbtools/blob/master/clean_pdb.py
+  https://github.com/openmm/pdbfixer
+  https://doi.org/10.1021/acs.jcim.1c00998
+  https://github.com/pablo-arantes/making-it-rain/issues
+  https://www.biorxiv.org/content/10.1101/2024.09.30.615802v1
+  https://doi.org/10.1038/s41586-023-06415-8
+
+Prof. Marco A. Deriu (marco.deriu@polito.it)
+Lorenzo Pallante (lorenzo.pallante@polito.it)
+Eric A. Zizzi (eric.zizzi@polito.it)
+Marcello Miceli (marcello.miceli@polito.it)
+Marco Cannariato (marco.cannariato@polito.it)
+
+  https://github.com/google-deepmind/alphafold
+  https://github.com/google-deepmind/alphafold3
+  https://github.com/sokrypton/ColabFold
+  https://github.com/openmm/openmm
