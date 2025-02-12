@@ -5,4 +5,6 @@ The emergence of TEM-171 β-lactamase represents a critical threat to modern ant
 ## Pipeline:
 This pipeline should serve as a guideline, visualization, and process description. The pipeline relies on several cutting-edge AL/ML tools for protein structure prediction, binder generation, protein analysis, molecular dynamics, docking & simulations, and more. Installation can be complex, so through this pipeline I provide an in-depth overview of all ML tool installations I utilized/produced, as well as results that followed.  
 
-shoutout Anish Maddipoti @NVIDIA Brev.dev
+##Credits
+
+Thanks to Dr. Jennifer Madrigal for the structural and crystallographic insight into the structure of the protein, as well as information surrounding basic MD simulations. Thank you to Cianna Calia, for all the help with BindCraft adn RFDiffusion, and the metrics behind these models. Special thanks to Anish Maddipoti at NVIDIA, for the large support and access to brev.dev credits to run trials.
