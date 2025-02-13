@@ -7,7 +7,7 @@ This pipeline should serve as a guideline, visualization, and process descriptio
 
 ## Credits:
 
-Thanks to Dr. Jennifer Madrigal for the structural and crystallographic insight into the structure of the protein, as well as information surrounding basic MD simulations. Thank you to Cianna Calia, for all the help with BindCraft and RFDiffusion, and the clarification of the exact metrics behind these models. Special thanks to Anish Maddipoti at NVIDIA, for the support and access to brev.dev credits to run trials.
+Thanks to Dr. Jennifer Madrigal for the structural and crystallographic insight into the structure of the protein, as well as information surrounding basic MD simulations. Thank you to Cianna Calia, for all the help with BindCraft and RFDiffusion, and the clarification of the exact metrics behind these models. Special thanks to Anish Maddipoti at NVIDIA, for the support and access to Brev.dev credits to run trials.
 
 Extended Credits for the code inspiration and segments to:
 
